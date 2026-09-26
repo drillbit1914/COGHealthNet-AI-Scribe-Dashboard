@@ -47,7 +47,7 @@ export const DEFAULT_SETTINGS: ClinicSettings = {
   PROVIDER_AGENDA_HOUR: 7,
   ACCOUNT_NAME: 'SET ME',
   NCBA_ACCOUNT_NO: 'SET ME',
-  CLINIC_PHONE: '+1 264 XXX XXXX',
+  CLINIC_PHONE: '+1 786 942 0603',
   ADMIN_ALERT_PHONES: [],
   CONSENT_VERSION: '2026-01',
   CANCELLATION_POLICY: 'Please cancel or reschedule at least 24 hours before your visit.',
