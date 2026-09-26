@@ -89,7 +89,7 @@ pnpm build && pnpm e2e           # Playwright at 390px against `next start`
 ## 6. First run checklist
 
 - **Staff logins.** The first administrator is Dr. Kniquiah Hughes (`ADMIN_EMAIL=kniquiah.hughes@gmail.com`). Sign in at `/admin/login` with that email, the initial password and the authenticator code printed by `pnpm db:seed`. Then create provider logins under **Settings → Staff logins**.
-- **Replace placeholders.** Under **Settings**, replace the placeholder providers, NCBA account name/number and admin alert phones. The clinic phone defaults to +1 786 942 0603. The bank details must match the printed notice at the clinic.
+- **Replace placeholders.** Under **Settings**, replace the placeholder providers. Defaults already set: clinic phone and staff alerts +1 786 942 0603; NCBA account "Wellness Ave." no. 6001232. The bank details must match the printed notice at the clinic.
 - **Check the hours.** Under **Settings → Opening hours**, confirm Friday 08:00–17:00 and Saturday 08:00–18:00, plus any per-provider overrides.
 - **Legal review.** Anguilla counsel reviews the consent text in `src/i18n/en.json` (`ui.details.consent*`), the privacy notice and the retention settings.
 
