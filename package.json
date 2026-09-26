@@ -1,40 +1,71 @@
 {
   "name": "wellness-ave-scheduling",
-  "version": "1.0.0",
-  "description": "Pediatric OT/PT scheduling (Wellness Ave) — Phase 1",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.33.0",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
-    "start": "tsx src/server.ts",
-    "worker": "tsx src/worker.ts",
-    "migrate": "tsx scripts/migrate.ts",
-    "create-staff": "tsx scripts/create-staff.ts",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "typecheck": "prisma generate >/dev/null && tsc --noEmit",
+    "test": "vitest run",
+    "e2e": "playwright test",
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:reset": "prisma migrate reset --force --skip-seed && tsx prisma/seed.ts",
+    "postinstall": "prisma generate"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/drillbit1914/COGHealthNet-AI-Scribe-Dashboard.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/drillbit1914/COGHealthNet-AI-Scribe-Dashboard/issues"
-  },
-  "homepage": "https://github.com/drillbit1914/COGHealthNet-AI-Scribe-Dashboard#readme",
   "dependencies": {
-    "@fastify/cookie": "^11.1.2",
-    "fastify": "^5.12.5",
+    "@fontsource/atkinson-hyperlegible": "^5.3.0",
+    "@prisma/adapter-pg": "7.10.0",
+    "@prisma/client": "7.10.0",
+    "@radix-ui/react-label": "^2.1.15",
+    "@radix-ui/react-slot": "^1.3.3",
+    "argon2": "^0.45.1",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.4.0",
+    "date-fns-tz": "^3.2.0",
+    "iron-session": "^9.0.1",
+    "lucide-react": "^1.48.0",
+    "next": "15.5.26",
     "pg": "^8.23.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "tailwind-merge": "^3.7.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.7",
+    "@playwright/test": "1.56.1",
+    "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^26.6.3",
     "@types/pg": "^8.23.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "dotenv": "^18.0.4",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "15.5.26",
+    "postcss": "^8.5.28",
+    "prettier": "^3.9.9",
+    "prettier-plugin-tailwindcss": "^0.8.1",
+    "prisma": "7.10.0",
+    "tailwindcss": "^4.3.3",
     "tsx": "^4.23.15",
-    "typescript": "^7.0.2",
+    "typescript": "^5.9.3",
     "vitest": "^5.0.2"
   },
-  "private": true,
-  "type": "module"
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "argon2",
+      "prisma",
+      "@prisma/engines",
+      "esbuild",
+      "unrs-resolver",
+      "sharp"
+    ]
+  }
 }

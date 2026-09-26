@@ -1,0 +1,31 @@
+@import 'tailwindcss';
+@import '@fontsource/atkinson-hyperlegible/400.css';
+@import '@fontsource/atkinson-hyperlegible/700.css';
+
+/* Wellness Ave design tokens (CLAUDE.md). */
+@theme {
+  --color-jacaranda: #5b3f8c;
+  --color-jacaranda-dark: #4a3273;
+  --color-jacaranda-light: #efe9f7;
+  --color-ink: #1f2230;
+  --color-paper: #fbfafd;
+  --color-acacia: #3c7a57;
+  --color-sunbird: #e7a93b;
+  --color-laterite: #b5412f;
+  --color-muted: #5d6070;
+  --color-line: #dedbe6;
+  --font-sans: 'Atkinson Hyperlegible', system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    color: var(--color-ink);
+    background: var(--color-paper);
+    font-family: var(--font-sans);
+    -webkit-text-size-adjust: 100%;
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-jacaranda);
+    outline-offset: 2px;
+  }
+}

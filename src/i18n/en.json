@@ -1,0 +1,61 @@
+{
+  "brand": {
+    "clinic": "Wellness Ave",
+    "product": "Wellness Ave Scheduling",
+    "parentTitle": "Book a visit | Wellness Ave",
+    "adminTitle": "Admin | Wellness Ave"
+  },
+  "visitType": { "FOLLOW_UP": "follow-up", "EVALUATION": "evaluation" },
+  "visitTypeTitle": { "FOLLOW_UP": "Follow-up", "EVALUATION": "Evaluation" },
+  "errors": {
+    "slotTaken": "That time was just taken. Please pick another time.",
+    "notFound": "We couldn't find that.",
+    "forbidden": "You don't have permission to do that.",
+    "signInRequired": "Please sign in to continue.",
+    "notifyOnlyCannotBook": "Bookings for {{child}} are made by the primary contact. Contact the clinic at {{CLINIC_PHONE}} for changes.",
+    "offerTaken": "Sorry, that time has already been taken.",
+    "tooManyCodes": "Too many codes requested. Please try again later.",
+    "codeLocked": "Too many wrong attempts. Please request a new code.",
+    "codeInvalid": "That code is not correct or has expired.",
+    "invalidPhone": "Please enter a valid mobile number.",
+    "consentsRequired": "Both consents are required.",
+    "reasonRequired": "A reason is required.",
+    "providerBusy": "That provider is not free for the full visit.",
+    "adminOnlyApprove": "Only the administrator can approve requests.",
+    "offerUnavailable": "This offer is no longer available."
+  },
+  "reasons": {
+    "requestExpired": "The request expired before it could be confirmed",
+    "alternateDeclined": "Alternate time declined.",
+    "alternateNoReply": "No reply was received for the offered time."
+  },
+  "booking": {
+    "otherGuardianHelper": "They will receive updates. Only you can book or change appointments.",
+    "neverNewBankDetails": "We will never send you new bank details by message."
+  },
+  "templates": {
+    "T0": "Your Wellness Ave code is {{code}}. It expires in 10 minutes.",
+    "T1": "Hi {{guardian}}, we received {{child}}'s follow-up request at Wellness Ave for {{day}} {{date}} at {{time}}. Ref {{ref}}. Payment options: cash at the clinic, or bank transfer to NCBA, account name {{ACCOUNT_NAME}}, account {{NCBA_ACCOUNT_NO}}, reference {{ref}}. After paying, reply with your transfer reference or a screenshot. We will never send new bank details by message. We will confirm shortly.",
+    "T2": "Hi {{guardian}}, Wellness Ave received {{child}}'s evaluation request for {{day}} {{date}} at {{time}}. Ref {{ref}}. Your therapist will reach out to you for confirmation.",
+    "T3": "Wellness Ave: {{child}}'s {{visit_type}} is confirmed: {{day}} {{date}}, {{time}}, with {{provider}}. Ref {{ref}}.",
+    "T4": "Wellness Ave could not confirm {{child}}'s request for {{date}} {{time}}. {{reason}}. Book another time: {{link}}",
+    "T5": "Wellness Ave can offer {{new_day}} {{new_date}} at {{new_time}} for {{child}} instead.",
+    "T6": "Reminder from Wellness Ave: {{child}} has {{visit_type}} tomorrow at {{time}} with {{provider}}.",
+    "T7": "Wellness Ave: {{child}}'s appointment on {{date}} at {{time}} is cancelled. {{reason}} Book again: {{link}}",
+    "T8": "Wellness Ave: a {{visit_type}} time opened: {{day}} {{date}} {{time}}. First to tap gets it.",
+    "T9": "{{inviter}} added you to receive appointment updates for {{child}} at Wellness Ave. Reply YES to receive them on WhatsApp, or STOP to opt out.",
+    "T10": "Wellness Ave is closed on {{date}} ({{reason}}). {{child}}'s {{time}} appointment is cancelled. We will contact you to rebook, or book here: {{link}}",
+    "S1": "Wellness Ave — new {{visit_type}} request: {{child}}, {{date}} {{time}}, suggested provider {{provider}}. Review: {{admin_link}}",
+    "S2": "Wellness Ave — request {{ref}} still pending. Expires {{expires_at}}.",
+    "S3": "Wellness Ave — today's schedule: {{n}} visits. First at {{time}}. {{link}}",
+    "smsManageSuffix": " Manage: {{link}}"
+  },
+  "buttons": {
+    "view": "View",
+    "reschedule": "Reschedule",
+    "accept": "Accept",
+    "chooseOther": "Choose another time",
+    "attend": "I'll be there",
+    "claim": "Claim"
+  }
+}

@@ -1,0 +1,481 @@
+// Wellness Ave Scheduling — PRD §11 data model. Tables and columns are snake_case in Postgres.
+// The no_provider_overlap exclusion constraint lives in a raw SQL migration (Prisma cannot express it).
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum VisitType {
+  FOLLOW_UP
+  EVALUATION
+
+  @@map("visit_type")
+}
+
+enum AppointmentStatus {
+  REQUESTED
+  ALTERNATE_PROPOSED
+  CONFIRMED
+  DECLINED
+  EXPIRED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+  CANCELLED_BY_PARENT
+  CANCELLED_BY_CLINIC
+  RESCHEDULED
+
+  @@map("appointment_status")
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID_CASH
+  PAID_BANK_TRANSFER
+  WAIVED
+
+  @@map("payment_status")
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+
+  @@map("payment_method")
+}
+
+enum Role {
+  ADMIN
+  PROVIDER
+
+  @@map("role")
+}
+
+enum Discipline {
+  OT
+  PT
+
+  @@map("discipline")
+}
+
+enum AssignedBy {
+  SYSTEM
+  ADMIN
+
+  @@map("assigned_by")
+}
+
+enum Channel {
+  WHATSAPP
+  SMS
+
+  @@map("channel")
+}
+
+enum MessageStatus {
+  PENDING
+  SENDING
+  SENT
+  DELIVERED
+  READ
+  FAILED
+  RECEIVED
+  SKIPPED
+
+  @@map("message_status")
+}
+
+enum Direction {
+  OUT
+  IN
+
+  @@map("direction")
+}
+
+enum PayerType {
+  INSURANCE
+  SELF_PAY
+
+  @@map("payer_type")
+}
+
+enum ConsentType {
+  DATA_PROCESSING
+  MESSAGING
+
+  @@map("consent_type")
+}
+
+enum WaitlistStatus {
+  ACTIVE
+  FULFILLED
+  REMOVED
+
+  @@map("waitlist_status")
+}
+
+enum WaitlistWindow {
+  ANY
+  MORNING
+  AFTERNOON
+
+  @@map("waitlist_window")
+}
+
+enum SeriesRule {
+  WEEKLY
+  BIWEEKLY
+
+  @@map("series_rule")
+}
+
+model ClinicSettings {
+  id        Int      @id @default(1) @db.SmallInt
+  settings  Json
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  @@map("clinic_settings")
+}
+
+model Provider {
+  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String
+  discipline   Discipline
+  color        String
+  phoneE164    String?    @map("phone_e164")
+  displayOrder Int        @default(0) @map("display_order")
+  active       Boolean    @default(true)
+
+  availabilityRules AvailabilityRule[]
+  timeOff           TimeOff[]
+  appointments      Appointment[]
+  series            RecurringSeries[]
+  staffUsers        StaffUser[]
+  waitlistOffers    WaitlistOffer[]
+  messages          Message[]
+
+  @@map("provider")
+}
+
+/// provider_id NULL = clinic-wide default. weekday 0 = Sunday … 6 = Saturday. Times are clinic-local.
+model AvailabilityRule {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  providerId String?   @map("provider_id") @db.Uuid
+  provider   Provider? @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  weekday    Int       @db.SmallInt
+  startTime  DateTime  @map("start_time") @db.Time(0)
+  endTime    DateTime  @map("end_time") @db.Time(0)
+
+  @@map("availability_rule")
+}
+
+/// provider_id NULL = clinic-wide block. is_closure marks the clinic-closure tool.
+model TimeOff {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  providerId String?   @map("provider_id") @db.Uuid
+  provider   Provider? @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  startsAt   DateTime  @map("starts_at") @db.Timestamptz(6)
+  endsAt     DateTime  @map("ends_at") @db.Timestamptz(6)
+  reason     String?
+  isClosure  Boolean   @default(false) @map("is_closure")
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([startsAt, endsAt])
+  @@map("time_off")
+}
+
+model Guardian {
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                 String?
+  phoneE164            String    @unique @map("phone_e164")
+  whatsappOptInAt      DateTime? @map("whatsapp_opt_in_at") @db.Timestamptz(6)
+  smsOptOutAt          DateTime? @map("sms_opt_out_at") @db.Timestamptz(6)
+  verifiedAt           DateTime? @map("verified_at") @db.Timestamptz(6)
+  /// Sessions issued before this instant are rejected (logout-everywhere, restriction, merge).
+  sessionsValidAfter   DateTime  @default(now()) @map("sessions_valid_after") @db.Timestamptz(6)
+  mergedIntoId         String?   @map("merged_into_id") @db.Uuid
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  links          GuardianPatient[] @relation("link")
+  invitedLinks   GuardianPatient[] @relation("invitedBy")
+  createdPatients Patient[]
+  requested      Appointment[]
+  consents       Consent[]
+  waitlist       WaitlistEntry[]
+  proofs         PaymentProof[]
+  messages       Message[]
+
+  @@map("guardian")
+}
+
+model Patient {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fullName            String    @map("full_name")
+  dob                 DateTime? @db.Date
+  createdByGuardianId String?   @map("created_by_guardian_id") @db.Uuid
+  createdBy           Guardian? @relation(fields: [createdByGuardianId], references: [id])
+  needsAdminMatch     Boolean   @default(false) @map("needs_admin_match")
+  mergedIntoId        String?   @map("merged_into_id") @db.Uuid
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  links        GuardianPatient[]
+  appointments Appointment[]
+  consents     Consent[]
+  waitlist     WaitlistEntry[]
+  series       RecurringSeries[]
+  rebook       RebookEntry[]
+
+  @@map("patient")
+}
+
+model GuardianPatient {
+  guardianId            String    @map("guardian_id") @db.Uuid
+  guardian              Guardian  @relation("link", fields: [guardianId], references: [id], onDelete: Cascade)
+  patientId             String    @map("patient_id") @db.Uuid
+  patient               Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  relationship          String?
+  canBook               Boolean   @default(false) @map("can_book")
+  receivesNotifications Boolean   @default(true) @map("receives_notifications")
+  /// Admin-only (e.g. court order). Never revealed in any parent-facing response.
+  restricted            Boolean   @default(false)
+  notes                 String?
+  addedByGuardianId     String?   @map("added_by_guardian_id") @db.Uuid
+  addedBy               Guardian? @relation("invitedBy", fields: [addedByGuardianId], references: [id])
+
+  @@id([guardianId, patientId])
+  @@map("guardian_patient")
+}
+
+model RecurringSeries {
+  id         String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  patientId  String      @map("patient_id") @db.Uuid
+  patient    Patient     @relation(fields: [patientId], references: [id])
+  providerId String      @map("provider_id") @db.Uuid
+  provider   Provider    @relation(fields: [providerId], references: [id])
+  visitType  VisitType   @map("visit_type")
+  rule       SeriesRule
+  count      Int
+  createdAt  DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  appointments Appointment[]
+
+  @@map("recurring_series")
+}
+
+model Appointment {
+  id                    String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ref                   String            @unique
+  patientId             String            @map("patient_id") @db.Uuid
+  patient               Patient           @relation(fields: [patientId], references: [id])
+  providerId            String            @map("provider_id") @db.Uuid
+  provider              Provider          @relation(fields: [providerId], references: [id])
+  providerAssignedBy    AssignedBy        @map("provider_assigned_by")
+  visitType             VisitType         @map("visit_type")
+  startsAt              DateTime          @map("starts_at") @db.Timestamptz(6)
+  endsAt                DateTime          @map("ends_at") @db.Timestamptz(6)
+  status                AppointmentStatus
+  requestedByGuardianId String?           @map("requested_by_guardian_id") @db.Uuid
+  requestedBy           Guardian?         @relation(fields: [requestedByGuardianId], references: [id])
+  expiresAt             DateTime?         @map("expires_at") @db.Timestamptz(6)
+  /// Original time when an alternate was proposed.
+  originalStartsAt      DateTime?         @map("original_starts_at") @db.Timestamptz(6)
+  seriesId              String?           @map("series_id") @db.Uuid
+  series                RecurringSeries?  @relation(fields: [seriesId], references: [id])
+  rescheduledFromId     String?           @map("rescheduled_from_id") @db.Uuid
+  rescheduledFrom       Appointment?      @relation("reschedule", fields: [rescheduledFromId], references: [id])
+  rescheduledTo         Appointment[]     @relation("reschedule")
+  declineReason         String?           @map("decline_reason")
+  cancelReason          String?           @map("cancel_reason")
+  paymentStatus         PaymentStatus     @default(UNPAID) @map("payment_status")
+  paymentMethod         PaymentMethod?    @map("payment_method")
+  paymentReference      String?           @map("payment_reference")
+  paymentRecordedBy     String?           @map("payment_recorded_by") @db.Uuid
+  paymentRecordedAt     DateTime?         @map("payment_recorded_at") @db.Timestamptz(6)
+  lateCancel            Boolean           @default(false) @map("late_cancel")
+  escalationSentAt      DateTime?         @map("escalation_sent_at") @db.Timestamptz(6)
+  /// Sent-marker for T6: set atomically so the reminder fires exactly once (AC 12).
+  reminderSentAt        DateTime?         @map("reminder_sent_at") @db.Timestamptz(6)
+  createdAt             DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  evaluation     EvaluationIntake?
+  proofs         PaymentProof[]
+  messages       Message[]
+  rebook         RebookEntry[]
+  waitlistOffers WaitlistOffer[]
+
+  @@index([patientId, startsAt])
+  @@index([status, startsAt])
+  @@map("appointment")
+}
+
+model EvaluationIntake {
+  appointmentId   String      @id @map("appointment_id") @db.Uuid
+  appointment     Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  reasonText      String      @map("reason_text") @db.VarChar(500)
+  reasonTags      String[]    @default([]) @map("reason_tags")
+  payerType       PayerType   @map("payer_type")
+  insurer         String?
+  memberNo        String?     @map("member_no")
+  hasReferral     Boolean     @default(false) @map("has_referral")
+  referralFileKey String?     @map("referral_file_key")
+
+  @@map("evaluation_intake")
+}
+
+model PaymentProof {
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  appointmentId String      @map("appointment_id") @db.Uuid
+  appointment   Appointment @relation(fields: [appointmentId], references: [id])
+  guardianId    String?     @map("guardian_id") @db.Uuid
+  guardian      Guardian?   @relation(fields: [guardianId], references: [id])
+  text          String?
+  fileKey       String?     @map("file_key")
+  receivedAt    DateTime    @default(now()) @map("received_at") @db.Timestamptz(6)
+  reviewedBy    String?     @map("reviewed_by") @db.Uuid
+  reviewedAt    DateTime?   @map("reviewed_at") @db.Timestamptz(6)
+
+  @@map("payment_proof")
+}
+
+model Consent {
+  id          String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  guardianId  String      @map("guardian_id") @db.Uuid
+  guardian    Guardian    @relation(fields: [guardianId], references: [id])
+  patientId   String?     @map("patient_id") @db.Uuid
+  patient     Patient?    @relation(fields: [patientId], references: [id])
+  type        ConsentType
+  version     String
+  grantedAt   DateTime    @default(now()) @map("granted_at") @db.Timestamptz(6)
+  withdrawnAt DateTime?   @map("withdrawn_at") @db.Timestamptz(6)
+
+  @@map("consent")
+}
+
+model WaitlistEntry {
+  id         String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  patientId  String         @map("patient_id") @db.Uuid
+  patient    Patient        @relation(fields: [patientId], references: [id])
+  guardianId String         @map("guardian_id") @db.Uuid
+  guardian   Guardian       @relation(fields: [guardianId], references: [id])
+  visitType  VisitType      @map("visit_type")
+  dateFrom   DateTime       @map("date_from") @db.Date
+  dateTo     DateTime       @map("date_to") @db.Date
+  window     WaitlistWindow @default(ANY)
+  status     WaitlistStatus @default(ACTIVE)
+  createdAt  DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("waitlist_entry")
+}
+
+/// One offer per freed slot, sent to up to 3 entries; the first claim wins atomically.
+model WaitlistOffer {
+  id               String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  providerId       String       @map("provider_id") @db.Uuid
+  provider         Provider     @relation(fields: [providerId], references: [id])
+  visitType        VisitType    @map("visit_type")
+  startsAt         DateTime     @map("starts_at") @db.Timestamptz(6)
+  endsAt           DateTime     @map("ends_at") @db.Timestamptz(6)
+  entryIds         String[]     @map("entry_ids") @db.Uuid
+  claimedByEntryId String?      @map("claimed_by_entry_id") @db.Uuid
+  claimedAt        DateTime?    @map("claimed_at") @db.Timestamptz(6)
+  appointmentId    String?      @map("appointment_id") @db.Uuid
+  appointment      Appointment? @relation(fields: [appointmentId], references: [id])
+  createdAt        DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("waitlist_offer")
+}
+
+/// Families to contact after a clinic closure.
+model RebookEntry {
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  patientId     String      @map("patient_id") @db.Uuid
+  patient       Patient     @relation(fields: [patientId], references: [id])
+  appointmentId String      @map("appointment_id") @db.Uuid
+  appointment   Appointment @relation(fields: [appointmentId], references: [id])
+  reason        String?
+  createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  resolvedAt    DateTime?   @map("resolved_at") @db.Timestamptz(6)
+
+  @@map("rebook_entry")
+}
+
+/// Outbox + message log. OUT rows start PENDING and are sent by the outbox worker.
+model Message {
+  id                String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  guardianId        String?        @map("guardian_id") @db.Uuid
+  guardian          Guardian?      @relation(fields: [guardianId], references: [id])
+  providerId        String?        @map("provider_id") @db.Uuid
+  provider          Provider?      @relation(fields: [providerId], references: [id])
+  appointmentId     String?        @map("appointment_id") @db.Uuid
+  appointment       Appointment?   @relation(fields: [appointmentId], references: [id])
+  templateKey       String?        @map("template_key")
+  channel           Channel?
+  /// Force SMS (e.g. T9 invite, which WhatsApp policy does not allow before opt-in).
+  smsOnly           Boolean        @default(false) @map("sms_only")
+  toPhone           String?        @map("to_phone")
+  providerMessageId String?        @map("provider_message_id")
+  status            MessageStatus
+  error             String?
+  direction         Direction
+  body              String?
+  vars              Json?
+  buttons           Json?
+  attempts          Int            @default(0)
+  nextAttemptAt     DateTime?      @map("next_attempt_at") @db.Timestamptz(6)
+  fallbackOfId      String?        @map("fallback_of_id") @db.Uuid
+  createdAt         DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime       @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  @@index([status, nextAttemptAt])
+  @@index([providerMessageId])
+  @@index([appointmentId])
+  @@map("message")
+}
+
+model OtpCode {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  phone      String
+  codeHash   String    @map("code_hash")
+  expiresAt  DateTime  @map("expires_at") @db.Timestamptz(6)
+  attempts   Int       @default(0)
+  consumedAt DateTime? @map("consumed_at") @db.Timestamptz(6)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([phone, createdAt])
+  @@map("otp_code")
+}
+
+model StaffUser {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email              String    @unique
+  role               Role
+  providerId         String?   @map("provider_id") @db.Uuid
+  provider           Provider? @relation(fields: [providerId], references: [id])
+  passwordHash       String    @map("password_hash")
+  totpSecret         String?   @map("totp_secret")
+  sessionsValidAfter DateTime  @default(now()) @map("sessions_valid_after") @db.Timestamptz(6)
+
+  @@map("staff_user")
+}
+
+model AuditLog {
+  id        BigInt   @id @default(autoincrement())
+  actorType String   @map("actor_type")
+  actorId   String?  @map("actor_id") @db.Uuid
+  action    String
+  entity    String
+  entityId  String?  @map("entity_id")
+  before    Json?
+  after     Json?
+  at        DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([entity, entityId])
+  @@map("audit_log")
+}

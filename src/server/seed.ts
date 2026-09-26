@@ -1,0 +1,60 @@
+import argon2 from 'argon2';
+import type { PrismaClient } from '@/generated/prisma/client';
+import { DEFAULT_SETTINGS } from './settings';
+import { newTotpSecret, totpUri } from './totp';
+
+const t = (hhmm: string) => new Date(`1970-01-01T${hhmm}:00Z`);
+
+/** Idempotent seed: PRD defaults, 4 placeholder providers (2 OT, 2 PT), clinic hours, first admin. */
+export async function seed(
+  db: PrismaClient,
+  opts: { adminEmail?: string; adminPassword?: string; log?: boolean } = {},
+) {
+  await db.clinicSettings.upsert({
+    where: { id: 1 },
+    create: { id: 1, settings: DEFAULT_SETTINGS as object },
+    update: {},
+  });
+
+  if ((await db.provider.count()) === 0) {
+    // Placeholder names — replace with the real team (pre-launch checklist item 6). AA contrast on white.
+    await db.provider.createMany({
+      data: [
+        { name: 'Provider A', discipline: 'OT', color: '#5B3F8C', displayOrder: 0 },
+        { name: 'Provider B', discipline: 'PT', color: '#1F6F8B', displayOrder: 1 },
+        { name: 'Provider C', discipline: 'OT', color: '#8A4B08', displayOrder: 2 },
+        { name: 'Provider D', discipline: 'PT', color: '#2E7D32', displayOrder: 3 },
+      ],
+    });
+  }
+
+  if ((await db.availabilityRule.count({ where: { providerId: null } })) === 0) {
+    await db.availabilityRule.createMany({
+      data: [
+        { weekday: 5, startTime: t('08:00'), endTime: t('17:00') }, // Friday
+        { weekday: 6, startTime: t('08:00'), endTime: t('18:00') }, // Saturday
+      ],
+    });
+  }
+
+  if (
+    opts.adminEmail &&
+    opts.adminPassword &&
+    !(await db.staffUser.findUnique({ where: { email: opts.adminEmail } }))
+  ) {
+    if (opts.adminPassword.length < 12) throw new Error('ADMIN_INITIAL_PASSWORD must be at least 12 characters');
+    const totpSecret = newTotpSecret();
+    await db.staffUser.create({
+      data: {
+        email: opts.adminEmail,
+        role: 'ADMIN',
+        passwordHash: await argon2.hash(opts.adminPassword, { type: argon2.argon2id }),
+        totpSecret,
+      },
+    });
+    if (opts.log) {
+      console.log(`Admin ${opts.adminEmail} created. Add this to an authenticator app (shown once):`);
+      console.log(totpUri(totpSecret, opts.adminEmail));
+    }
+  }
+}
