@@ -5,8 +5,14 @@
     "parentTitle": "Book a visit | Wellness Ave",
     "adminTitle": "Admin | Wellness Ave"
   },
-  "visitType": { "FOLLOW_UP": "follow-up", "EVALUATION": "evaluation" },
-  "visitTypeTitle": { "FOLLOW_UP": "Follow-up", "EVALUATION": "Evaluation" },
+  "visitType": {
+    "FOLLOW_UP": "follow-up",
+    "EVALUATION": "evaluation"
+  },
+  "visitTypeTitle": {
+    "FOLLOW_UP": "Follow-up",
+    "EVALUATION": "Evaluation"
+  },
   "errors": {
     "slotTaken": "That time was just taken. Please pick another time.",
     "notFound": "We couldn't find that.",
@@ -22,7 +28,12 @@
     "reasonRequired": "A reason is required.",
     "providerBusy": "That provider is not free for the full visit.",
     "adminOnlyApprove": "Only the administrator can approve requests.",
-    "offerUnavailable": "This offer is no longer available."
+    "offerUnavailable": "This offer is no longer available.",
+    "internal": "Something went wrong. Please try again.",
+    "uploadType": "Upload a PDF, JPG or PNG.",
+    "uploadSize": "The file must be 10 MB or smaller.",
+    "unknownFile": "Please upload the referral letter again.",
+    "invalidRange": "Please choose a valid date range."
   },
   "reasons": {
     "requestExpired": "The request expired before it could be confirmed",
@@ -57,5 +68,162 @@
     "chooseOther": "Choose another time",
     "attend": "I'll be there",
     "claim": "Claim"
+  },
+  "ui": {
+    "signIn": {
+      "title": "Sign in",
+      "phoneLabel": "Mobile number",
+      "phoneHelp": "We'll send a 6-digit code by WhatsApp or SMS. Numbers outside Anguilla: start with + and the country code.",
+      "sendCode": "Send code",
+      "codeTitle": "Enter your code",
+      "codeHelp": "We sent a 6-digit code to {{phone}}. It expires in 10 minutes.",
+      "codeLabel": "6-digit code",
+      "verify": "Verify and continue",
+      "differentNumber": "Use a different number",
+      "resend": "Send a new code"
+    },
+    "home": {
+      "greeting": "Hello{{name}}",
+      "book": "Book a visit",
+      "visits": "My visits",
+      "signOut": "Sign out",
+      "children": "Your children",
+      "noChildren": "You haven't booked a visit yet.",
+      "nameLabel": "Your name",
+      "saveName": "Save name",
+      "namePrompt": "What should we call you in messages?"
+    },
+    "steps": {
+      "type": "Visit type",
+      "time": "Date and time",
+      "details": "Details",
+      "review": "Review",
+      "stepOf": "Step {{n}} of 4",
+      "back": "Back",
+      "continue": "Continue"
+    },
+    "type": {
+      "title": "What kind of visit?",
+      "FOLLOW_UP": "Follow-up",
+      "FOLLOW_UP_help": "1 hour, for children already seen at Wellness Ave",
+      "EVALUATION": "Evaluation",
+      "EVALUATION_help": "1.5 hours, a first full assessment"
+    },
+    "time": {
+      "title": "Pick a time",
+      "help": "Times shown in Anguilla time (AST). We'll assign your therapist when we confirm.",
+      "none": "No open times in the next 4 weeks. You can join the waitlist from My visits.",
+      "loading": "Finding open times…",
+      "pickDate": "Choose a day",
+      "pickTime": "Choose a time"
+    },
+    "details": {
+      "title": "Details",
+      "whoFor": "Who is this visit for?",
+      "someoneNew": "Someone new",
+      "childName": "Child's full name",
+      "dob": "Date of birth",
+      "reason": "Reason for evaluation",
+      "reasonHelp": "{{n}} of 500 characters",
+      "reasonTags": "Areas of concern (optional)",
+      "tags": {
+        "fine_motor": "Fine motor",
+        "gross_motor": "Gross motor",
+        "sensory_processing": "Sensory processing",
+        "feeding": "Feeding",
+        "handwriting": "Handwriting",
+        "developmental_delay": "Developmental delay",
+        "post_injury_surgery": "Post-injury or surgery",
+        "other": "Other"
+      },
+      "payment": "How will you pay?",
+      "INSURANCE": "Insurance",
+      "SELF_PAY": "Self-pay",
+      "insurer": "Insurer name",
+      "memberNo": "Member or policy number",
+      "referral": "Do you have a referral letter?",
+      "yes": "Yes",
+      "no": "No",
+      "upload": "Upload referral letter",
+      "uploadHelp": "PDF, JPG or PNG, up to 10 MB",
+      "uploaded": "Uploaded: {{name}}",
+      "uploading": "Uploading…",
+      "otherGuardian": "Other parent or guardian (optional)",
+      "otherGuardianPrompt": "Add another parent or guardian so they get appointment updates too.",
+      "ogName": "Their name",
+      "ogRelationship": "Relationship",
+      "ogPhone": "Their mobile number",
+      "ogNotify": "Send appointment updates to this person",
+      "consents": "Consents",
+      "consentData": "I consent to Wellness Ave collecting and using my child's personal and health information for care and scheduling.",
+      "consentMessaging": "I consent to receiving appointment messages by WhatsApp or SMS.",
+      "needsMatch": "We'll match this name to your child's record."
+    },
+    "review": {
+      "title": "Check and send",
+      "visit": "Visit",
+      "when": "When",
+      "child": "Child",
+      "submit": "Request this time",
+      "submitting": "Sending…",
+      "therapistNote": "Your therapist is assigned when the clinic confirms your visit."
+    },
+    "done": {
+      "title": "Request sent",
+      "ref": "Booking reference",
+      "pending": "We'll confirm by WhatsApp or SMS.",
+      "evalNote": "Your therapist will reach out to you for confirmation.",
+      "payTitle": "Payment options",
+      "payCash": "Cash at the clinic",
+      "payBank": "Bank transfer to NCBA",
+      "accountName": "Account name",
+      "accountNo": "Account number",
+      "payRef": "Reference",
+      "addCalendar": "Add to calendar",
+      "viewVisits": "View my visits",
+      "bookAnother": "Book another visit"
+    },
+    "visits": {
+      "title": "My visits",
+      "upcoming": "Upcoming",
+      "past": "Past",
+      "none": "No visits yet.",
+      "cancel": "Cancel visit",
+      "cancelConfirm": "Cancel this visit?",
+      "cancelLate": "This is within {{hours}} hours of the visit, so it will be recorded as a late cancellation.",
+      "keep": "Keep visit",
+      "reschedule": "Change time",
+      "acceptAlt": "Accept new time",
+      "declineAlt": "Decline",
+      "altOffered": "The clinic offered a new time",
+      "with": "with {{provider}}",
+      "ref": "Ref {{ref}}",
+      "waitlistTitle": "Join the waitlist",
+      "waitlistHelp": "We'll message you if a time opens up. The first to tap gets it.",
+      "from": "From",
+      "to": "To",
+      "window": "Time of day",
+      "ANY": "Any time",
+      "MORNING": "Morning",
+      "AFTERNOON": "Afternoon",
+      "join": "Join waitlist",
+      "joined": "You're on the waitlist.",
+      "rescheduleTitle": "Pick a new time",
+      "rescheduleSubmit": "Request this new time"
+    },
+    "status": {
+      "REQUESTED": "Requested",
+      "ALTERNATE_PROPOSED": "New time offered",
+      "CONFIRMED": "Confirmed",
+      "DECLINED": "Not confirmed",
+      "EXPIRED": "Expired",
+      "CANCELLED": "Cancelled",
+      "COMPLETED": "Completed",
+      "NO_SHOW": "Missed",
+      "CANCELLED_BY_PARENT": "Cancelled",
+      "CANCELLED_BY_CLINIC": "Cancelled by clinic",
+      "RESCHEDULED": "Rescheduled"
+    },
+    "errorGeneric": "Something went wrong. Please try again."
   }
 }
