@@ -139,3 +139,29 @@ export async function enqueueAdminAlert(db: Queryable, key: TemplateKey, vars: V
     await enqueue(db, { key, vars: { ...settingsVars(s), ...vars }, toPhone: phone, appointmentId: apptId, now });
   }
 }
+
+/** Free-form reply on the channel the person wrote in on (WhatsApp session message or SMS). */
+export async function enqueueReply(
+  db: Queryable,
+  r: {
+    toPhone: string;
+    guardianId?: string | null;
+    channel: 'WHATSAPP' | 'SMS';
+    body: string;
+    appointmentId?: string | null;
+    now: Date;
+  },
+) {
+  await exec(
+    db,
+    `INSERT INTO message (guardian_id, appointment_id, template_key, channel, to_phone, status, direction, body, buttons,
+                          next_attempt_at, created_at, updated_at)
+     VALUES ($1::uuid, $2::uuid, 'REPLY', $3::channel, $4, 'PENDING', 'OUT', $5, '[]'::jsonb, $6, $6, $6)`,
+    r.guardianId ?? null,
+    r.appointmentId ?? null,
+    r.channel,
+    r.toPhone,
+    r.body,
+    r.now,
+  );
+}

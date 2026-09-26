@@ -1,23 +1,20 @@
-import 'dotenv/config';
-import pg from 'pg';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 
-/** E2E helper: read the latest OTP from the outbox (the stub provider doesn't send anything yet). */
+const LOG = path.resolve('test-results/e2e-messages.jsonl');
+
+/** E2E: read the OTP the console messaging stub "sent" (codes are never kept in the database). */
 export async function latestOtp(phone: string): Promise<string> {
-  const c = new pg.Client({ connectionString: process.env.DATABASE_URL });
-  await c.connect();
-  try {
-    for (let i = 0; i < 20; i++) {
-      const r = await c.query(
-        `SELECT body FROM message WHERE template_key = 'T0' AND to_phone = $1 ORDER BY created_at DESC LIMIT 1`,
-        [phone],
-      );
-      if (r.rows[0]) return r.rows[0].body.match(/\d{6}/)[0];
-      await new Promise((res) => setTimeout(res, 250));
-    }
-    throw new Error('no OTP');
-  } finally {
-    await c.end();
+  for (let i = 0; i < 40; i++) {
+    const lines = (await fs.readFile(LOG, 'utf8').catch(() => '')).trim().split('\n').filter(Boolean);
+    const hit = lines
+      .map((l) => JSON.parse(l))
+      .reverse()
+      .find((m) => m.to === phone && m.templateKey === 'T0');
+    if (hit) return hit.params[0];
+    await new Promise((r) => setTimeout(r, 250));
   }
+  throw new Error(`no OTP for ${phone}`);
 }
 
 export const randomPhone = () => `+1264${String(Math.floor(2000000 + Math.random() * 7999999))}`;

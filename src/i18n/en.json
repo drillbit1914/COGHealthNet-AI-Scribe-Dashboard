@@ -225,5 +225,14 @@
       "RESCHEDULED": "Rescheduled"
     },
     "errorGeneric": "Something went wrong. Please try again."
+  },
+  "replies": {
+    "notAllowed": "Only the primary contact can change this appointment. Please contact Wellness Ave at {{CLINIC_PHONE}}.",
+    "unavailable": "Sorry, that option is no longer available. Please contact Wellness Ave at {{CLINIC_PHONE}}.",
+    "offerTaken": "Sorry, that time has already been taken. We'll let you know if another opens up.",
+    "attendThanks": "Thanks for confirming. See you then at Wellness Ave.",
+    "manageLink": "You can view or change your visit here: {{link}}",
+    "optIn": "Thanks. You'll now receive Wellness Ave appointment updates on WhatsApp.",
+    "proofReceived": "Thanks, Wellness Ave received your payment details for {{ref}}. The clinic will check them and confirm."
   }
 }

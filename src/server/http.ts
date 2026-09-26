@@ -1,10 +1,11 @@
-import { NextResponse, type NextRequest } from 'next/server';
+import { after, NextResponse, type NextRequest } from 'next/server';
 import { ZodError } from 'zod';
 import { t } from '@/i18n';
 import type { Actor } from './audit';
 import { actorFromRequest } from './auth/session';
 import { defaultCtx, type Ctx } from './context';
 import { AppError, forbidden, unauthorized } from './errors';
+import { processOutbox } from './messaging/outbox';
 
 /** Test seam: route handlers use this context; tests swap in a fixed clock and test DB. */
 let ctxOverride: Ctx | undefined;
@@ -27,6 +28,7 @@ export function route(fn: (a: HandlerArgs) => Promise<Response | unknown>) {
       const actor = await actorFromRequest(req, ctx.db, ctx.now());
       const params = (await context?.params) ?? {};
       const out = await fn({ req, ctx, actor, params });
+      if (req.method !== 'GET') kickOutbox(ctx);
       return out instanceof Response ? out : NextResponse.json(out ?? { ok: true });
     } catch (e) {
       if (e instanceof AppError) return NextResponse.json({ error: e.code, message: e.message }, { status: e.status });
@@ -55,3 +57,16 @@ export function requireStaff(actor: Actor | null, adminOnly = false): Extract<Ac
 }
 
 export const json = async (req: NextRequest) => (await req.json().catch(() => ({}))) as unknown;
+
+/**
+ * Send what this request queued right after the response (codes, confirmations), instead of waiting
+ * for the next cron tick. Outside a request scope (unit tests) this is a no-op.
+ */
+function kickOutbox(ctx: Ctx) {
+  if (ctxOverride) return;
+  try {
+    after(() => processOutbox(ctx).catch((e) => console.error('outbox', e)));
+  } catch {
+    /* not in a request scope */
+  }
+}

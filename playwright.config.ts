@@ -1,6 +1,8 @@
+import path from 'node:path';
 import { defineConfig, devices } from '@playwright/test';
 
 const PORT = Number(process.env.E2E_PORT ?? 3100);
+export const MESSAGE_LOG = path.resolve('test-results/e2e-messages.jsonl');
 export default defineConfig({
   testDir: 'tests/e2e',
   timeout: 60000,
@@ -14,6 +16,6 @@ export default defineConfig({
     command: `pnpm next start -p ${PORT}`,
     port: PORT,
     reuseExistingServer: !process.env.CI,
-    env: { ...process.env, E2E: '1' } as Record<string, string>,
+    env: { ...process.env, E2E: '1', MESSAGING_LOG_FILE: MESSAGE_LOG } as Record<string, string>,
   },
 });

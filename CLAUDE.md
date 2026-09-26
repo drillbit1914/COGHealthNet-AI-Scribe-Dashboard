@@ -49,3 +49,6 @@ pnpm dev | pnpm typecheck | pnpm test | pnpm e2e | pnpm db:migrate | pnpm db:see
 - Test DB: `TEST_DATABASE_URL` (default `postgres://wav:wav@localhost:5432/wav_test`). Vitest applies migrations with `prisma migrate deploy` and truncates tables between tests. Prisma refuses `migrate reset` from AI agents — do not work around that guard.
 - Tests run with `TZ=Asia/Tokyo` to prove AST rendering is machine-independent.
 - Pin TypeScript 5.x (Next 15 is incompatible with TypeScript 7).
+- Outbox: sends happen only in `src/server/messaging/outbox.ts`. WhatsApp failure → immediate SMS fallback row (`fallback_of_id`); SMS retries 3× with backoff. T0 bodies/vars are nulled after sending — never log OTPs.
+- Waitlist: offers go out inside the transaction that frees a slot; `/api/cron/waitlist` sweeps for any other open times and closes expired entries.
+- Tests stub messaging with `tests/unit/mock-providers.ts` (`setProviders`); route handlers use `setRouteCtx` for the fixed clock.
