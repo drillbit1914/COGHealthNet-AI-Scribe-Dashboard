@@ -17,6 +17,11 @@ export default function globalSetup() {
     env: { ...env, ADMIN_EMAIL: '', ADMIN_INITIAL_PASSWORD: '' },
     stdio: 'pipe',
   });
+  // E2E runs against four test providers, not the clinic's real roster.
+  execSync(
+    `psql "${E2E_DB}" -q -c "DELETE FROM provider; INSERT INTO provider (name, discipline, color, display_order) VALUES ('Provider A','OT','#5B3F8C',0),('Provider B','PT','#1F6F8B',1),('Provider C','OT','#8A4B08',2),('Provider D','PT','#2E7D32',3);"`,
+    { stdio: 'pipe' },
+  );
   fs.mkdirSync('test-results', { recursive: true });
   fs.rmSync(MESSAGE_LOG, { force: true });
 }

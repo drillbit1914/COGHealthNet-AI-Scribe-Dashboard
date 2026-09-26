@@ -5,7 +5,7 @@ import { newTotpSecret, totpUri } from './totp';
 
 const t = (hhmm: string) => new Date(`1970-01-01T${hhmm}:00Z`);
 
-/** Idempotent seed: PRD defaults, 4 placeholder providers (2 OT, 2 PT), clinic hours, first admin. */
+/** Idempotent seed: PRD defaults, the pilot provider (Dr. Hughes), clinic hours, first admin. */
 export async function seed(
   db: PrismaClient,
   opts: { adminEmail?: string; adminPassword?: string; log?: boolean } = {},
@@ -17,14 +17,15 @@ export async function seed(
   });
 
   if ((await db.provider.count()) === 0) {
-    // Placeholder names — replace with the real team (pre-launch checklist item 6). AA contrast on white.
-    await db.provider.createMany({
-      data: [
-        { name: 'Provider A', discipline: 'OT', color: '#5B3F8C', displayOrder: 0 },
-        { name: 'Provider B', discipline: 'PT', color: '#1F6F8B', displayOrder: 1 },
-        { name: 'Provider C', discipline: 'OT', color: '#8A4B08', displayOrder: 2 },
-        { name: 'Provider D', discipline: 'PT', color: '#2E7D32', displayOrder: 3 },
-      ],
+    // Pilot: Dr. Hughes is the only provider. Add more under Admin → Settings → Providers.
+    await db.provider.create({
+      data: {
+        name: 'Dr. Kniquiah Hughes',
+        discipline: 'OT',
+        color: '#5B3F8C',
+        phoneE164: '+17869420603',
+        displayOrder: 0,
+      },
     });
   }
 

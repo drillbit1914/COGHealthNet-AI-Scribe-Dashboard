@@ -42,9 +42,21 @@ export async function setup(): Promise<TestEnv> {
       },
     },
   });
-  const providers = (await d.provider.findMany({ orderBy: { displayOrder: 'asc' } })).map((p) => p.id);
-  for (const [i, name] of ['Ana', 'Ben', 'Cara', 'Dev'].entries())
-    await d.provider.update({ where: { id: providers[i] }, data: { name, phoneE164: `+12645550${i}10` } });
+  // Tests use their own four providers (2 OT, 2 PT), independent of the clinic's real roster.
+  await d.provider.deleteMany();
+  const providers: string[] = [];
+  for (const [i, [name, discipline, color]] of (
+    [
+      ['Ana', 'OT', '#5B3F8C'],
+      ['Ben', 'PT', '#1F6F8B'],
+      ['Cara', 'OT', '#8A4B08'],
+      ['Dev', 'PT', '#2E7D32'],
+    ] as const
+  ).entries())
+    providers.push(
+      (await d.provider.create({ data: { name, discipline, color, displayOrder: i, phoneE164: `+12645550${i}10` } }))
+        .id,
+    );
   const clock = { now: NOW };
   return { db: d, ctx: { db: d, now: () => clock.now }, clock, providers };
 }

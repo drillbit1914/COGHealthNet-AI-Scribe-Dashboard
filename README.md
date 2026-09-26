@@ -25,7 +25,7 @@ The spec is [`docs/PRD.md`](docs/PRD.md) and the project rules are in [`CLAUDE.m
 pnpm install                     # also generates the Prisma client
 cp .env.example .env             # set DATABASE_URL, DIRECT_URL, SESSION_SECRET (32+ chars), ADMIN_EMAIL, ADMIN_INITIAL_PASSWORD
 pnpm db:migrate                  # schema + btree_gist no_provider_overlap constraint
-pnpm db:seed                     # PRD defaults, 4 placeholder providers, Fri/Sat hours, first admin (prints the TOTP URI once)
+pnpm db:seed                     # PRD defaults, pilot provider Dr. Kniquiah Hughes, Fri/Sat hours, first admin (prints the TOTP URI once)
 pnpm dev                         # http://localhost:3000/book and /admin
 ```
 
@@ -89,7 +89,7 @@ pnpm build && pnpm e2e           # Playwright at 390px against `next start`
 ## 6. First run checklist
 
 - **Staff logins.** The first administrator is Dr. Kniquiah Hughes (`ADMIN_EMAIL=kniquiah.hughes@gmail.com`). Sign in at `/admin/login` with that email, the initial password and the authenticator code printed by `pnpm db:seed`. Then create provider logins under **Settings → Staff logins**.
-- **Replace placeholders.** Under **Settings**, replace the placeholder providers. Defaults already set: clinic phone and staff alerts +1 786 942 0603; NCBA account "Wellness Ave." no. 6001232. The bank details must match the printed notice at the clinic.
+- **Providers.** The pilot runs with one provider, Dr. Kniquiah Hughes. Add providers later under **Settings → Providers**; set each one's hours under **Opening hours** if they differ from the clinic's. Defaults already set: clinic phone and staff alerts +1 786 942 0603; NCBA account "Wellness Ave." no. 6001232. The bank details must match the printed notice at the clinic.
 - **Check the hours.** Under **Settings → Opening hours**, confirm Friday 08:00–17:00 and Saturday 08:00–18:00, plus any per-provider overrides.
 - **Legal review.** Anguilla counsel reviews the consent text in `src/i18n/en.json` (`ui.details.consent*`), the privacy notice and the retention settings.
 
