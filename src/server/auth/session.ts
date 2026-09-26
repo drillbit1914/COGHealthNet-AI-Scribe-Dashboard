@@ -63,9 +63,9 @@ export async function actorFromCookie(
   }
   const u = await db.staffUser.findUnique({
     where: { id: s.staffId },
-    select: { sessionsValidAfter: true, role: true, providerId: true },
+    select: { sessionsValidAfter: true, role: true, providerId: true, active: true },
   });
-  if (!u || u.sessionsValidAfter.getTime() > s.iat) return null;
+  if (!u || !u.active || u.sessionsValidAfter.getTime() > s.iat) return null;
   return { type: 'STAFF', id: s.staffId, role: u.role, providerId: u.providerId };
 }
 

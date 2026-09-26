@@ -33,7 +33,10 @@
     "uploadType": "Upload a PDF, JPG or PNG.",
     "uploadSize": "The file must be 10 MB or smaller.",
     "unknownFile": "Please upload the referral letter again.",
-    "invalidRange": "Please choose a valid date range."
+    "invalidRange": "Please choose a valid date range.",
+    "badLogin": "Email, password or code is not correct.",
+    "locked": "Too many attempts. Try again in 15 minutes.",
+    "totpRequired": "Administrators must set up two-factor authentication."
   },
   "reasons": {
     "requestExpired": "The request expired before it could be confirmed",

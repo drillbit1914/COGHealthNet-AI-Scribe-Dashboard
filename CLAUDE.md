@@ -52,3 +52,5 @@ pnpm dev | pnpm typecheck | pnpm test | pnpm e2e | pnpm db:migrate | pnpm db:see
 - Outbox: sends happen only in `src/server/messaging/outbox.ts`. WhatsApp failure → immediate SMS fallback row (`fallback_of_id`); SMS retries 3× with backoff. T0 bodies/vars are nulled after sending — never log OTPs.
 - Waitlist: offers go out inside the transaction that frees a slot; `/api/cron/waitlist` sweeps for any other open times and closes expired entries.
 - Tests stub messaging with `tests/unit/mock-providers.ts` (`setProviders`); route handlers use `setRouteCtx` for the fixed clock.
+- Admin API: one catch-all route (`src/app/api/admin/[...path]`) dispatching the table in `src/server/admin/api.ts`; `admin: true` marks ADMIN-only routes, services scope providers to their own visits.
+- E2E uses its own disposable DB (`E2E_DATABASE_URL`, default `wav_e2e`), reset by `tests/e2e/global-setup.ts`. `pnpm acceptance` runs typecheck, unit, build and e2e; `docs/ACCEPTANCE.md` maps PRD §14 to tests.

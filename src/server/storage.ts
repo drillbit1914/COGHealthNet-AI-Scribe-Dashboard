@@ -80,10 +80,18 @@ export class LocalStorage implements Storage {
 let storage: Storage | undefined;
 export function getStorage(): Storage {
   const e = process.env;
-  storage ??=
-    e.SUPABASE_URL && e.SUPABASE_SERVICE_ROLE_KEY
-      ? new SupabaseStorage(e.SUPABASE_URL, e.SUPABASE_SERVICE_ROLE_KEY, e.STORAGE_BUCKET ?? 'wellness-ave-private')
-      : new LocalStorage(path.resolve(e.FILE_ROOT ?? '.data/files'));
+  if (!storage) {
+    if (e.SUPABASE_URL && e.SUPABASE_SERVICE_ROLE_KEY)
+      storage = new SupabaseStorage(
+        e.SUPABASE_URL,
+        e.SUPABASE_SERVICE_ROLE_KEY,
+        e.STORAGE_BUCKET ?? 'wellness-ave-private',
+      );
+    else if (e.NODE_ENV === 'production' && e.E2E !== '1')
+      // Serverless disks are ephemeral: referral letters and payment proofs would be lost.
+      throw new Error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required in production');
+    else storage = new LocalStorage(path.resolve(e.FILE_ROOT ?? '.data/files'));
+  }
   return storage;
 }
 export const setStorage = (s: Storage) => void (storage = s);

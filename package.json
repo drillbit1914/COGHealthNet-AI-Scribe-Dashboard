@@ -16,7 +16,8 @@
     "db:migrate": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "prisma migrate reset --force --skip-seed && tsx prisma/seed.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "acceptance": "pnpm typecheck && pnpm test && pnpm build && pnpm e2e"
   },
   "dependencies": {
     "@fontsource/atkinson-hyperlegible": "^5.3.0",

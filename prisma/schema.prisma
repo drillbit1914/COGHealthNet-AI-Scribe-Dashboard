@@ -460,6 +460,9 @@ model StaffUser {
   provider           Provider? @relation(fields: [providerId], references: [id])
   passwordHash       String    @map("password_hash")
   totpSecret         String?   @map("totp_secret")
+  failedLogins       Int       @default(0) @map("failed_logins")
+  lockedUntil        DateTime? @map("locked_until") @db.Timestamptz(6)
+  active             Boolean   @default(true)
   sessionsValidAfter DateTime  @default(dbgenerated("'1970-01-01 00:00:00+00'::timestamptz")) @map("sessions_valid_after") @db.Timestamptz(6)
 
   @@map("staff_user")

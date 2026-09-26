@@ -12,3 +12,11 @@ export async function requireGuardianPage(): Promise<string> {
 export async function currentActor() {
   return actorFromCookie((await cookies()).get(SESSION_COOKIE)?.value);
 }
+
+/** Staff pages: the signed-in staff actor, or redirect to the staff login. Optionally admin-only. */
+export async function requireStaffPage(adminOnly = false) {
+  const actor = await currentActor();
+  if (actor?.type !== 'STAFF') redirect('/admin/login');
+  if (adminOnly && actor.role !== 'ADMIN') redirect('/admin/queue');
+  return actor;
+}
