@@ -48,7 +48,10 @@ export async function providerAgendas(ctx: Ctx) {
   });
 }
 
-export const JOBS = {
+export const JOBS: Record<
+  'expire' | 'reminders' | 'agenda' | 'waitlist' | 'retention' | 'outbox' | 'all',
+  (ctx: Ctx) => Promise<object>
+> = {
   /** Expire REQUESTED / ALTERNATE_PROPOSED past expiry (T4/T7) and send S2 escalations. */
   expire: async (ctx: Ctx) => ({ expired: await expire(ctx), escalated: await escalate(ctx) }),
   /** T6 exactly once, 24h before each CONFIRMED visit (reminder_sent_at marker). */
@@ -59,7 +62,14 @@ export const JOBS = {
     purged: await purgeMessageBodies(ctx, (await getSettings(ctx.db)).MESSAGE_RETENTION_MONTHS),
   }),
   outbox: async () => ({}),
-} as const;
+  /** Everything in one call — for a single scheduler (Vercel Hobby daily cron, or Supabase pg_cron every 5 min). */
+  all: async (ctx: Ctx) => {
+    const out: Record<string, unknown> = {};
+    for (const name of ['expire', 'reminders', 'agenda', 'waitlist', 'retention'] as const)
+      out[name] = await JOBS[name](ctx);
+    return out;
+  },
+};
 export type JobName = keyof typeof JOBS;
 
 /** Run a job, then flush the outbox so its messages go out in the same tick. */

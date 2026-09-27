@@ -30,7 +30,7 @@ This guide is for Dr. Kniquiah Hughes and whoever helps with setup. Follow the p
 ## Part B: Vercel (puts the app online), about 20 minutes
 
 1. **Create an account.** Go to <https://vercel.com/signup> and choose **Continue with GitHub**, using the GitHub account that owns the repository.
-2. **Choose the Pro plan.** The app runs reminders and request expiry every 5 minutes, and the free Hobby plan rejects that schedule, so the first deployment would fail. Vercel usually offers a Pro trial; otherwise it's about US$20 a month.
+2. **Hobby (free) is fine.** Vercel runs the app's housekeeping job once a day on Hobby. For the every-5-minutes timing that reminders and request expiry need, use Supabase's free scheduler (step 8 below).
 3. **Start the import.** Go to <https://vercel.com/new> and **Import** `drillbit1914/COGHealthNet-AI-Scribe-Dashboard`. Leave the framework (Next.js) and the build settings as detected.
 4. **Add the variables.** Before clicking Deploy, open **Environment Variables** and add these:
 
@@ -49,7 +49,21 @@ This guide is for Dr. Kniquiah Hughes and whoever helps with setup. Follow the p
 
 5. **Deploy.** Click **Deploy**. The build creates the database tables, the settings and Dr. Hughes's admin login, which takes 2–4 minutes. When it finishes, Vercel shows a web address like `https://coghealthnet-ai-scribe-dashboard.vercel.app`.
 6. **Set the web address.** Go to **Project → Settings → Environment Variables** and add `APP_BASE_URL` = that web address (no slash at the end). Then open **Deployments**, find the latest one, click **⋯ → Redeploy**.
-7. **Security clean-up.** After Dr. Hughes has signed in once (Part C step 1), delete `ADMIN_INITIAL_PASSWORD` from Vercel. It's only used to create the first login.
+7. **If Vercel pre-filled settings** ("Environment Variables · 23 Detected"), delete any that aren't in the table above or are empty. Fix the rest to the values in the table.
+8. **Every-5-minutes timing (free, in Supabase).** In Supabase, open **SQL Editor → New query**. Paste this, replacing the two capitalised parts with your web address and your `CRON_SECRET`, then click **Run**:
+
+   ```sql
+   create extension if not exists pg_cron;
+   create extension if not exists pg_net;
+   select cron.schedule('wellness-ave-every-5-min', '*/5 * * * *', $$
+     select net.http_get(
+       url := 'https://YOUR-ADDRESS.vercel.app/api/cron/all',
+       headers := jsonb_build_object('Authorization', 'Bearer YOUR-CRON-SECRET'),
+       timeout_milliseconds := 60000);
+   $$);
+   ```
+   To check it's working: **Database → Cron jobs** shows it running every 5 minutes.
+9. **Security clean-up.** After Dr. Hughes has signed in once (Part C step 1), delete `ADMIN_INITIAL_PASSWORD` from Vercel. It's only used to create the first login.
 
 Later, use your own address, e.g. `book.wellnessave.com`: **Project → Settings → Domains**. Then update `APP_BASE_URL` and redeploy.
 

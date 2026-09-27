@@ -522,3 +522,16 @@ describe('Twilio webhook', () => {
     expect(mp.to(await phoneOf(g))).toHaveLength(0);
   });
 });
+
+describe('single scheduler endpoint', () => {
+  it('/api/cron/all runs expiry, reminders, agenda, waitlist and retention, then flushes the outbox', async () => {
+    const g = await guardian(env.db, 'A');
+    const kid = await child(env.db, 'Kid', [{ g, canBook: true }]);
+    const r = await createRequest(env.ctx, g, fu(kid, at(SAT, '09:00')));
+    await confirm(env.ctx, ADMIN, r.appointmentId);
+    env.clock.now = new Date(at(SAT, '09:00').getTime() - 20 * 3600000);
+    const res = await (await runCron('all')).json();
+    expect(res).toMatchObject({ job: 'all', reminders: { reminders: 1 }, expire: { expired: 0 } });
+    expect(mp.byTemplate('T6')).toHaveLength(1);
+  });
+});
