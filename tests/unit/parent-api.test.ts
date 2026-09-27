@@ -145,6 +145,11 @@ describe('booking flow via API', () => {
     expect(r.json.payment.reference).toBe(r.json.ref);
     expect(r.json.notice).toMatch(/never send you new bank details/);
     expect(r.text).not.toMatch(/Ana|Ben|Cara|Dev|providerId/);
+    // Their messaging consent opts them in to WhatsApp; the co-parent stays on SMS until they reply YES.
+    expect((await env.db.guardian.findUniqueOrThrow({ where: { id: p.guardianId } })).whatsappOptInAt).not.toBeNull();
+    expect(
+      (await env.db.guardian.findUniqueOrThrow({ where: { phoneE164: '+17215550101' } })).whatsappOptInAt,
+    ).toBeNull();
     const meRes = await call(me.GET, { cookie: p.cookie });
     expect(meRes.json.children).toEqual([expect.objectContaining({ name: 'Maya Richardson', canBook: true })]);
     const list = await call(appts.GET, { cookie: p.cookie, params: { id: meRes.json.children[0].id } });

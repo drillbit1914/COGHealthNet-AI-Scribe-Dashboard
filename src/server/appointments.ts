@@ -321,6 +321,14 @@ export async function createRequest(ctx: Ctx, guardianId: string, raw: unknown) 
           s.CONSENT_VERSION,
           now,
         );
+        // The booking guardian's own messaging consent ("by WhatsApp or SMS") is their WhatsApp opt-in (PRD §7).
+        if (type === 'MESSAGING')
+          await exec(
+            tx,
+            'UPDATE guardian SET whatsapp_opt_in_at = COALESCE(whatsapp_opt_in_at, $2) WHERE id = $1::uuid',
+            guardianId,
+            now,
+          );
       }
     }
 
