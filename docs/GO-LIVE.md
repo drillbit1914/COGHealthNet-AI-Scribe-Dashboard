@@ -18,8 +18,9 @@ This guide is for Dr. Kniquiah Hughes and whoever helps with setup. Follow the p
    - Database password: click **Generate a password** and copy it. **→ save as the database password**
    - Region: **East US (North Virginia)**, the closest to Anguilla.
    - Plan: Free is fine for the pilot. Before real families use it, upgrade to **Pro** for daily backups and so the project never pauses (the free plan pauses after a week without use).
-3. **Copy the database address.** Once the project is ready, click **Connect** at the top and choose the **Session pooler** tab. Copy the connection string (it starts with `postgresql://postgres.` and ends with `:5432/postgres`). Replace `[YOUR-PASSWORD]` with the database password. Don't add anything else to the end.
+3. **Copy the database address.** Once the project is ready, click **Connect** at the top. Tap the **Direct / Connection string** tile, and choose **Session pooler** as the method. Copy the connection string (it starts with `postgresql://postgres.` and ends with `:5432/postgres`). Replace `[YOUR-PASSWORD]` with the database password. Don't add anything else to the end.
    **→ save as `DATABASE_URL`, and the same value as `DIRECT_URL`**
+   - Forgot the password? Go to **Project Settings → Database → Reset database password**.
 4. **Create the private file bucket.** In the left menu, open **Storage → New bucket**. Name it `wellness-ave-private` and leave **Public bucket OFF**. Referral letters and payment screenshots are stored here.
 5. **Copy the storage keys.** Go to **Project Settings → Data API**. Copy the **Project URL**.
    **→ save as `SUPABASE_URL`**
