@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import { appBaseUrl } from '../env';
 import fs from 'node:fs/promises';
 import { metaTemplate, type Button, type TemplateKey } from './templates';
 
@@ -160,7 +161,7 @@ export function getProviders(): Providers {
           e.TWILIO_ACCOUNT_SID,
           e.TWILIO_AUTH_TOKEN,
           e.TWILIO_FROM_NUMBER,
-          e.APP_BASE_URL ? `${e.APP_BASE_URL}/api/webhooks/sms` : undefined,
+          `${appBaseUrl()}/api/webhooks/sms`,
         )
       : new ConsoleProvider('SMS');
   if (e.NODE_ENV === 'production' && (whatsapp instanceof ConsoleProvider || sms instanceof ConsoleProvider))

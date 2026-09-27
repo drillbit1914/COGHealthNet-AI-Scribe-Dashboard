@@ -2,6 +2,7 @@ import { sealData, unsealData } from 'iron-session';
 import { NextResponse, type NextRequest } from 'next/server';
 import type { Actor } from '../audit';
 import { getDb, type Queryable } from '../db';
+import { sessionSecret } from '../env';
 
 export const SESSION_COOKIE = 'wellnessave_session';
 export const PARENT_SESSION_S = 30 * 86400; // PRD §13
@@ -13,8 +14,8 @@ export type SessionData =
   | { kind: 'staff'; staffId: string; role: 'ADMIN' | 'PROVIDER'; providerId: string | null; iat: number; exp: number };
 
 const password = () => {
-  const p = process.env.SESSION_SECRET;
-  if (!p || p.length < 32) throw new Error('SESSION_SECRET must be at least 32 characters');
+  const p = sessionSecret();
+  if (p.length < 32) throw new Error('SESSION_SECRET must be at least 32 characters');
   return p;
 };
 

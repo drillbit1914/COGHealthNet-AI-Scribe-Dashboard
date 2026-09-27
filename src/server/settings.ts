@@ -58,6 +58,7 @@ export async function getSettings(db: Queryable): Promise<ClinicSettings> {
   return { ...DEFAULT_SETTINGS, ...((row?.settings as Partial<ClinicSettings>) ?? {}) };
 }
 
-export const appBaseUrl = () => process.env.APP_BASE_URL ?? 'http://localhost:3000';
+export { appBaseUrl } from './env';
+import { appBaseUrl } from './env';
 export const bookingLink = () => `${appBaseUrl()}/book`;
 export const adminLink = () => `${appBaseUrl()}/admin`;

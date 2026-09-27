@@ -4,6 +4,7 @@ import QRCode from 'qrcode';
 import { t } from '@/i18n';
 import { audit } from '../audit';
 import type { Ctx } from '../context';
+import { sessionSecret } from '../env';
 import { AppError, conflict } from '../errors';
 import { newTotpSecret, totpUri, verifyTotp } from '../totp';
 
@@ -61,7 +62,7 @@ interface EnrollToken {
   secret: string;
   exp: number;
 }
-const password = () => process.env.SESSION_SECRET ?? '';
+const password = () => sessionSecret();
 
 /** Start 2FA enrollment: a fresh secret sealed into a 10-minute token, plus its QR code. */
 export async function startEnrollment(ctx: Ctx, staffId: string, email: string) {

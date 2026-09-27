@@ -1,5 +1,6 @@
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient, type Prisma } from '@/generated/prisma/client';
+import { databaseUrl, pgConfig } from './env';
 
 export type Db = PrismaClient;
 export type Tx = Prisma.TransactionClient;
@@ -7,9 +8,9 @@ export type Queryable = PrismaClient | Prisma.TransactionClient;
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
-export function createPrisma(url = process.env.DATABASE_URL): PrismaClient {
+export function createPrisma(url = databaseUrl()): PrismaClient {
   if (!url) throw new Error('DATABASE_URL is not set');
-  return new PrismaClient({ adapter: new PrismaPg({ connectionString: url }) });
+  return new PrismaClient({ adapter: new PrismaPg(pgConfig(url)) });
 }
 
 /** Process-wide client (reused across Next.js hot reloads). */

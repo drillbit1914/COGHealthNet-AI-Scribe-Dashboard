@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { env as envVar, sessionSecret } from './env';
 
 /** Private file storage with 15-minute signed URLs (PRD §12). */
 export interface Storage {
@@ -66,10 +67,7 @@ export class LocalStorage implements Storage {
     return { data: await fs.readFile(f), contentType: await fs.readFile(f + '.type', 'utf8') };
   }
   static sign(key: string, exp: number) {
-    return crypto
-      .createHmac('sha256', process.env.SESSION_SECRET ?? '')
-      .update(`${key}:${exp}`)
-      .digest('base64url');
+    return crypto.createHmac('sha256', sessionSecret()).update(`${key}:${exp}`).digest('base64url');
   }
   async signedUrl(key: string) {
     const exp = Math.floor(Date.now() / 1000) + TTL_S;
@@ -78,20 +76,42 @@ export class LocalStorage implements Storage {
 }
 
 let storage: Storage | undefined;
+const supabaseUrl = () => envVar('SUPABASE_URL') ?? envVar('NEXT_PUBLIC_SUPABASE_URL');
+export const storageBucket = () => envVar('STORAGE_BUCKET') ?? 'wellness-ave-private';
+
 export function getStorage(): Storage {
-  const e = process.env;
   if (!storage) {
-    if (e.SUPABASE_URL && e.SUPABASE_SERVICE_ROLE_KEY)
-      storage = new SupabaseStorage(
-        e.SUPABASE_URL,
-        e.SUPABASE_SERVICE_ROLE_KEY,
-        e.STORAGE_BUCKET ?? 'wellness-ave-private',
-      );
-    else if (e.NODE_ENV === 'production' && e.E2E !== '1')
+    const url = supabaseUrl();
+    const key = envVar('SUPABASE_SERVICE_ROLE_KEY');
+    if (url && key) storage = new SupabaseStorage(url, key, storageBucket());
+    else if (process.env.NODE_ENV === 'production' && process.env.E2E !== '1')
       // Serverless disks are ephemeral: referral letters and payment proofs would be lost.
       throw new Error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required in production');
-    else storage = new LocalStorage(path.resolve(e.FILE_ROOT ?? '.data/files'));
+    else storage = new LocalStorage(path.resolve(envVar('FILE_ROOT') ?? '.data/files'));
   }
   return storage;
 }
 export const setStorage = (s: Storage) => void (storage = s);
+
+/** Create the private bucket if it doesn't exist yet (run at deploy by the seed). */
+export async function ensurePrivateBucket(): Promise<'created' | 'exists' | 'skipped'> {
+  const url = supabaseUrl();
+  const key = envVar('SUPABASE_SERVICE_ROLE_KEY');
+  if (!url || !key) return 'skipped';
+  const headers = { Authorization: `Bearer ${key}`, apikey: key, 'Content-Type': 'application/json' };
+  const got = await fetch(`${url}/storage/v1/bucket/${storageBucket()}`, { headers });
+  if (got.ok) return 'exists';
+  const res = await fetch(`${url}/storage/v1/bucket`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      id: storageBucket(),
+      name: storageBucket(),
+      public: false,
+      file_size_limit: MAX_UPLOAD_BYTES,
+    }),
+  });
+  if (!res.ok && res.status !== 409)
+    throw new Error(`Could not create storage bucket: ${res.status} ${await res.text()}`);
+  return 'created';
+}

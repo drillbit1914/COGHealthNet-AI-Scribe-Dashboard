@@ -3,7 +3,7 @@
 This guide is for Dr. Kniquiah Hughes and whoever helps with setup. Follow the parts in order.
 
 **Two tracks run side by side:**
-- **Tonight (about 1 hour).** Parts A–C put the app online and let you run a full practice pilot. Sign-in codes are read from a log screen for now.
+- **Tonight (about 45 minutes).** Parts A–C put the app online and let you run a full practice pilot. Sign-in codes are read from a log screen for now.
 - **This week and next.** Parts D–E connect real SMS and WhatsApp. Meta's WhatsApp verification takes 1–3 weeks, so start Part E today as well.
 
 **Keep a private note as you go.** Each step produces a value you'll paste into Vercel in Part B (marked **→ save as `NAME`**). Keep them in a password manager or a private note, and never send them by WhatsApp or email.
@@ -27,30 +27,25 @@ This guide is for Dr. Kniquiah Hughes and whoever helps with setup. Follow the p
 6. **Copy the service key.** Go to **Project Settings → API Keys → Legacy API keys** and copy the `service_role` key. It's secret: never share it or put it in a web page.
    **→ save as `SUPABASE_SERVICE_ROLE_KEY`**
 
-## Part B: Vercel (puts the app online), about 20 minutes
+## Part B: Vercel (puts the app online), about 10 minutes
 
-1. **Create an account.** Go to <https://vercel.com/signup> and choose **Continue with GitHub**, using the GitHub account that owns the repository.
-2. **Hobby (free) is fine.** Vercel runs the app's housekeeping job once a day on Hobby. For the every-5-minutes timing that reminders and request expiry need, use Supabase's free scheduler (step 8 below).
-3. **Start the import.** Go to <https://vercel.com/new> and **Import** `drillbit1914/COGHealthNet-AI-Scribe-Dashboard`. Leave the framework (Next.js) and the build settings as detected.
-4. **Add the variables.** Before clicking Deploy, open **Environment Variables** and add these:
+The Supabase ↔ Vercel integration copies the database and storage settings into Vercel for you. The app works out its web address and session secret by itself and creates its private storage bucket. **The only value you type is Dr. Hughes's password.**
 
-   | Name | Value |
-   |---|---|
-   | `DATABASE_URL` | from A3 |
-   | `DIRECT_URL` | from A3 (same value) |
-   | `SUPABASE_URL` | from A5 |
-   | `SUPABASE_SERVICE_ROLE_KEY` | from A6 |
-   | `STORAGE_BUCKET` | `wellness-ave-private` |
-   | `SESSION_SECRET` | a random 40+ character string (make one at <https://1password.com/password-generator>: Random, 40 characters) |
-   | `CRON_SECRET` | another, different random 40-character string |
-   | `ADMIN_EMAIL` | `kniquiah.hughes@gmail.com` |
-   | `ADMIN_INITIAL_PASSWORD` | the password Dr. Hughes will sign in with (12+ characters, not reused anywhere) |
-   | `APP_BASE_URL` | leave it for now; set it in step 6 |
-
-5. **Deploy.** Click **Deploy**. The build creates the database tables, the settings and Dr. Hughes's admin login, which takes 2–4 minutes. When it finishes, Vercel shows a web address like `https://coghealthnet-ai-scribe-dashboard.vercel.app`.
-6. **Set the web address.** Go to **Project → Settings → Environment Variables** and add `APP_BASE_URL` = that web address (no slash at the end). Then open **Deployments**, find the latest one, click **⋯ → Redeploy**.
-7. **If Vercel pre-filled settings** ("Environment Variables · 23 Detected"), delete any that aren't in the table above or are empty. Fix the rest to the values in the table.
-8. **Every-5-minutes timing (free, in Supabase).** In Supabase, open **SQL Editor → New query**. Paste this, replacing the two capitalised parts with your web address and your `CRON_SECRET`, then click **Run**:
+1. **Use the right project.** In Vercel, open the project imported from **`drillbit1914/COGHealthNet-AI-Scribe-Dashboard`** (preset **Next.js**, root `./`).
+   - Not the `eva-clinic…` / `artifacts/api-server` / Express one: that's the separate Replit build.
+   - If the project doesn't exist yet, create it at <https://vercel.com/new>. The free **Hobby** plan is fine.
+2. **Connect Supabase to Vercel.** In Supabase, open your project, then **Integrations → Vercel → Install Vercel integration**.
+   - Choose the Vercel team **wellness Ave** and the project from step 1, then confirm.
+   - Supabase now adds `POSTGRES_URL_NON_POOLING`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` and similar settings to Vercel.
+3. **Clean up the pre-filled settings.** In Vercel, go to **Project → Settings → Environment Variables**. **Delete** every variable whose value is empty or contains `localhost`: typically `DATABASE_URL`, `DIRECT_URL` and `APP_BASE_URL` from the first import.
+4. **Add the one value you need to type.**
+   - `ADMIN_INITIAL_PASSWORD` = Dr. Hughes's sign-in password (12+ characters, not reused anywhere). Her sign-in email is already `kniquiah.hughes@gmail.com`.
+   - Optional now, needed for automatic reminders (step 7): `CRON_SECRET` = a random 40-character string from <https://1password.com/password-generator>.
+5. **Deploy.** Go to **Deployments**, open the latest one, then **⋯ → Redeploy**. Wait for **Ready** (2–4 minutes). The build creates the tables, the settings, the storage bucket and Dr. Hughes's login.
+6. **Security clean-up.** After Dr. Hughes has signed in once (Part C step 1), delete `ADMIN_INITIAL_PASSWORD` from Vercel.
+7. **Every-5-minutes timing (free, in Supabase).** Needed for reminders and request expiry, but not for tonight's pilot.
+   - Add `CRON_SECRET` in Vercel if you skipped it, and redeploy.
+   - In Supabase, open **SQL Editor → New query**. Paste this, replacing the two capitalised parts, then click **Run**:
 
    ```sql
    create extension if not exists pg_cron;
@@ -62,10 +57,12 @@ This guide is for Dr. Kniquiah Hughes and whoever helps with setup. Follow the p
        timeout_milliseconds := 60000);
    $$);
    ```
-   To check it's working: **Database → Cron jobs** shows it running every 5 minutes.
-9. **Security clean-up.** After Dr. Hughes has signed in once (Part C step 1), delete `ADMIN_INITIAL_PASSWORD` from Vercel. It's only used to create the first login.
 
-Later, use your own address, e.g. `book.wellnessave.com`: **Project → Settings → Domains**. Then update `APP_BASE_URL` and redeploy.
+Later, use your own address, e.g. `book.wellnessave.com`: **Project → Settings → Domains**. Then set `APP_BASE_URL` to it and redeploy.
+
+**If a deployment fails:** open the failed deployment and scroll the build log to the first red line. Common causes:
+- **Deleted too little in step 3:** a `localhost` value is still there.
+- **Supabase integration not connected:** the log says "DATABASE_URL is not set".
 
 ## Part C: tonight's practice pilot, about 30–45 minutes
 

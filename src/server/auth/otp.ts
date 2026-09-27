@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import { t } from '@/i18n';
 import type { Ctx } from '../context';
 import { exec, q } from '../db';
+import { sessionSecret } from '../env';
 import { AppError, tooMany } from '../errors';
 import { enqueue } from '../notifications';
 import { toE164 } from '../phone';
@@ -12,10 +13,7 @@ const OTP_PER_HOUR = 5; // PRD §13
 const OTP_MAX_ATTEMPTS = 5; // PRD §13
 
 const otpHash = (phone: string, code: string) =>
-  crypto
-    .createHmac('sha256', process.env.SESSION_SECRET ?? '')
-    .update(`${phone}:${code}`)
-    .digest('hex');
+  crypto.createHmac('sha256', sessionSecret()).update(`${phone}:${code}`).digest('hex');
 
 /** Hashed 6-digit code, 10-minute expiry, 5 per phone per hour; sent as T0 via the outbox. */
 export async function requestOtp(ctx: Ctx, rawPhone: string) {

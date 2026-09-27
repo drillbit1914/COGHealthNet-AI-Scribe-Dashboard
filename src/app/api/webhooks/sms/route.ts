@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { appBaseUrl } from '@/server/env';
 import { routeCtx } from '@/server/http';
 import { handleInbound } from '@/server/messaging/inbound';
 import { processOutbox, recordDeliveryStatus } from '@/server/messaging/outbox';
@@ -15,7 +16,7 @@ const twiml = () =>
 /** Twilio status callbacks and inbound SMS/MMS. Signature is over the public URL Twilio called. */
 export async function POST(req: NextRequest) {
   const params = Object.fromEntries(new URLSearchParams(await req.text()));
-  const publicUrl = `${process.env.APP_BASE_URL ?? req.nextUrl.origin}${req.nextUrl.pathname}${req.nextUrl.search}`;
+  const publicUrl = `${appBaseUrl()}${req.nextUrl.pathname}${req.nextUrl.search}`;
   if (!verifyTwilioSignature(publicUrl, params, req.headers.get('x-twilio-signature'), process.env.TWILIO_AUTH_TOKEN))
     return NextResponse.json({ error: 'BAD_SIGNATURE' }, { status: 401 });
   const ctx = routeCtx();
