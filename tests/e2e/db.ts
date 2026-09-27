@@ -58,3 +58,22 @@ export async function createStaff(role: 'ADMIN' | 'PROVIDER', providerName?: str
     await c.end();
   }
 }
+
+/** Admin exactly as the seed creates one: password only, 2FA enrolled at first sign-in. */
+export async function createAdminWithoutTotp() {
+  const c = new pg.Client({
+    connectionString: process.env.E2E_DATABASE_URL ?? 'postgres://wav:wav@localhost:5432/wav_e2e',
+  });
+  await c.connect();
+  try {
+    const email = `first-admin-${crypto.randomUUID().slice(0, 8)}@wellnessave.test`;
+    const password = 'e2e-password-123';
+    await c.query(`INSERT INTO staff_user (email, role, password_hash) VALUES ($1, 'ADMIN', $2)`, [
+      email,
+      await argon2.hash(password),
+    ]);
+    return { email, password, codeFor: (secret: string) => totp(secret) };
+  } finally {
+    await c.end();
+  }
+}

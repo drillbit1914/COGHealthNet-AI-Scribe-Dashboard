@@ -5,6 +5,7 @@ import { NextRequest } from 'next/server';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import * as admin from '@/app/api/admin/[...path]/route';
 import * as staffLogin from '@/app/api/auth/staff/login/route';
+import * as totpSetup from '@/app/api/auth/staff/totp-setup/route';
 import * as me from '@/app/api/book/me/route';
 import { createRequest } from '@/server/appointments';
 import { sealSession } from '@/server/auth/session';
@@ -118,8 +119,30 @@ describe('staff login (PRD §13)', () => {
     expect((await login(a.email, 'correct horse battery', totpAt(a.secret!, env.clock.now.getTime()))).status).toBe(
       200,
     );
-    const noTotp = await makeStaff('ADMIN', { totp: false });
-    expect((await login(noTotp.email, 'correct horse battery')).json.error).toBe('TOTP_REQUIRED');
+    // An admin without 2FA must enroll before getting a session.
+    const fresh = await makeStaff('ADMIN', { totp: false });
+    const first = await login(fresh.email, 'correct horse battery');
+    expect(first.status).toBe(200);
+    expect(first.cookie).toBeNull();
+    expect(first.json).toMatchObject({ needsTotpSetup: true, qr: expect.stringMatching(/^data:image\/png;base64,/) });
+    const finish = (code: string) =>
+      totpSetup.POST(
+        new NextRequest('http://localhost/api/auth/staff/totp-setup', {
+          method: 'POST',
+          body: JSON.stringify({ setupToken: first.json.setupToken, code }),
+          headers: { 'content-type': 'application/json' },
+        }),
+        { params: Promise.resolve({}) },
+      );
+    expect((await finish('000000')).status).toBe(401);
+    const done = await finish(totpAt(first.json.secret, env.clock.now.getTime()));
+    expect(done.status).toBe(200);
+    expect(done.headers.get('set-cookie')).toMatch(/^wellnessave_session=/);
+    expect((await finish(totpAt(first.json.secret, env.clock.now.getTime()))).status).toBe(409); // token can't re-enroll
+    expect((await login(fresh.email, 'correct horse battery')).status).toBe(401); // now requires the code
+    expect(
+      (await login(fresh.email, 'correct horse battery', totpAt(first.json.secret, env.clock.now.getTime()))).status,
+    ).toBe(200);
     expect((await login('nobody@wellnessave.test', 'x')).status).toBe(401);
   });
 
@@ -433,7 +456,7 @@ describe('payments, closures, series, settings, reports', () => {
       })
     ).json;
     expect(created.temporaryPassword).toHaveLength(16);
-    expect(created.totpUri).toMatch(/^otpauth:\/\/totp\/Wellness%20Ave:/);
+    expect(created).not.toHaveProperty('totpUri');
   });
 
   it('reports: visits by provider, load, outcomes, no-show rate, payments', async () => {

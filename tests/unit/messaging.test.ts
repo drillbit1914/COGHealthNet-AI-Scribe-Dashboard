@@ -245,6 +245,20 @@ describe('WhatsApp → SMS fallback and retries (AC 8)', () => {
     expect(await get()).toMatchObject({ status: 'FAILED', attempts: 3 });
   });
 
+  it('SMS-only launch: before WhatsApp is configured, codes and updates go by SMS to opted-in guardians too', async () => {
+    mp.whatsappEnabled = false;
+    const g = await guardian(env.db, 'A'); // opted in to WhatsApp
+    const kid = await child(env.db, 'Kid', [{ g, canBook: true }]);
+    await requestOtp(env.ctx, await phoneOf(g));
+    const r = await createRequest(env.ctx, g, fu(kid, at(FRI, '09:00')));
+    await confirm(env.ctx, ADMIN, r.appointmentId);
+    await flush();
+    const mine = mp.to(await phoneOf(g));
+    expect(mine.map((m) => m.channel)).toEqual(['SMS', 'SMS', 'SMS']);
+    expect(mine[2].body).toContain(`Manage: ${BASE}/book`); // T3 buttons become a link
+    expect(await env.db.message.count({ where: { status: 'FAILED' } })).toBe(0);
+  });
+
   it('never keeps one-time codes in the message log after sending', async () => {
     await requestOtp(env.ctx, '+12645550999');
     await flush();

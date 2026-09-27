@@ -54,3 +54,5 @@ pnpm dev | pnpm typecheck | pnpm test | pnpm e2e | pnpm db:migrate | pnpm db:see
 - Tests stub messaging with `tests/unit/mock-providers.ts` (`setProviders`); route handlers use `setRouteCtx` for the fixed clock.
 - Admin API: one catch-all route (`src/app/api/admin/[...path]`) dispatching the table in `src/server/admin/api.ts`; `admin: true` marks ADMIN-only routes, services scope providers to their own visits.
 - E2E uses its own disposable DB (`E2E_DATABASE_URL`, default `wav_e2e`), reset by `tests/e2e/global-setup.ts`. `pnpm acceptance` runs typecheck, unit, build and e2e; `docs/ACCEPTANCE.md` maps PRD §14 to tests.
+- Deploy: Vercel runs `vercel-build` (prisma generate → migrate deploy → idempotent seed → next build). Seeded admins have no TOTP; the first sign-in forces QR enrollment (`/api/auth/staff/totp-setup`).
+- SMS-only launch: when Twilio is configured but WhatsApp isn't, `getProviders().whatsappEnabled` is false and every message goes by SMS. Go-live steps: `docs/GO-LIVE.md`; Meta templates: `docs/WHATSAPP_TEMPLATES.md` (regenerate with `pnpm tsx scripts/whatsapp-templates.ts`).

@@ -61,9 +61,13 @@ export async function processOutbox(
   return out;
 }
 
-async function resolveChannel(db: Queryable, m: MsgRow): Promise<{ channel: 'WHATSAPP' | 'SMS'; skip?: string }> {
+async function resolveChannel(
+  db: Queryable,
+  m: MsgRow,
+  whatsappEnabled: boolean,
+): Promise<{ channel: 'WHATSAPP' | 'SMS'; skip?: string }> {
   if (m.channel) return { channel: m.channel };
-  if (m.sms_only) return { channel: 'SMS' };
+  if (m.sms_only || !whatsappEnabled) return { channel: 'SMS' };
   if (m.template_key === 'T0') return { channel: 'WHATSAPP' }; // PRD §5: code by WhatsApp, SMS fallback
   if (!m.guardian_id) return { channel: 'WHATSAPP' }; // staff and provider alerts
   const [g] = await q(db, 'SELECT whatsapp_opt_in_at FROM guardian WHERE id = $1::uuid', m.guardian_id);
@@ -84,7 +88,7 @@ function smsBody(m: MsgRow) {
 
 async function sendOne(ctx: Ctx, providers: Providers, m: MsgRow, out: OutboxResult) {
   const now = ctx.now();
-  const { channel } = await resolveChannel(ctx.db, m);
+  const { channel } = await resolveChannel(ctx.db, m, providers.whatsappEnabled !== false);
   if (channel === 'SMS' && (await smsOptedOut(ctx.db, m))) {
     await exec(
       ctx.db,

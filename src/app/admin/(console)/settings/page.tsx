@@ -408,7 +408,7 @@ function StaffLogins() {
     );
   const providers = useData<Provider[]>('/api/admin/providers');
   const [f, setF] = useState({ email: '', role: 'PROVIDER', providerId: '' });
-  const [created, setCreated] = useState<{ email: string; temporaryPassword: string; totpUri: string } | null>(null);
+  const [created, setCreated] = useState<{ email: string; temporaryPassword: string } | null>(null);
   const { busy, error, run } = useAction();
   return (
     <Panel title="Staff logins">
@@ -480,13 +480,11 @@ function StaffLogins() {
       </div>
       {created && (
         <div className="border-sunbird mt-3 rounded-md border-l-4 bg-[#fdf5e6] p-3 text-sm">
-          <p className="font-bold">Give these to {created.email} privately. They are shown once.</p>
+          <p className="font-bold">Give this to {created.email} privately. It is shown once.</p>
           <p>
             Temporary password: <code className="font-mono">{created.temporaryPassword}</code>
           </p>
-          <p className="break-all">
-            Authenticator setup: <code className="font-mono">{created.totpUri}</code>
-          </p>
+          <p>Administrators scan a QR code into an authenticator app the first time they sign in.</p>
         </div>
       )}
       <ErrorNote error={error} />

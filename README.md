@@ -41,12 +41,10 @@ pnpm build && pnpm e2e           # Playwright at 390px against `next start`
 ## 2. Supabase (database + private storage)
 
 1. **Create a Supabase project.** Pick the region closest to Anguilla (e.g. `us-east-1`). Note in the privacy notice that data is hosted outside Anguilla (PRD §13).
-2. **Set the database URLs.** Under Project settings → Database → Connection string:
-   - `DATABASE_URL` = the **transaction pooler** URL (port `6543`, add `?pgbouncer=true`).
-   - `DIRECT_URL` = the **direct** URL (port `5432`). Migrations use this one.
-3. **Run migrations once, from your machine or CI.** Run `pnpm db:migrate`, then `pnpm db:seed`. The migration enables `btree_gist`, which Supabase supports.
+2. **Set the database URLs.** Click **Connect** in the Supabase dashboard and copy the **Session pooler** connection string (IPv4, port `5432`). Use it for both `DATABASE_URL` and `DIRECT_URL`, replacing `[YOUR-PASSWORD]`. The direct connection is IPv6-only and Vercel can't reach it.
+3. **Migrations run automatically.** Vercel's build (`vercel-build`) runs `prisma migrate deploy` and the idempotent seed, which creates the first admin from `ADMIN_EMAIL` / `ADMIN_INITIAL_PASSWORD`. That admin sets up two-factor by scanning a QR code at first sign-in.
 4. **Create a private bucket.** Under Storage, create a **private** bucket named `wellness-ave-private` (or set `STORAGE_BUCKET`). Leave it private: files are only ever served by 15-minute signed URLs.
-5. **Set the storage keys.** Set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (Project settings → API). The service role key is server-only; never expose it to the browser.
+5. **Set the storage keys.** Set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (Project settings → API Keys → **Legacy API keys** → `service_role`). The service role key is server-only; never expose it to the browser.
 
 ## 3. Vercel
 
@@ -88,7 +86,9 @@ pnpm build && pnpm e2e           # Playwright at 390px against `next start`
 
 ## 6. First run checklist
 
-- **Staff logins.** The first administrator is Dr. Kniquiah Hughes (`ADMIN_EMAIL=kniquiah.hughes@gmail.com`). Sign in at `/admin/login` with that email, the initial password and the authenticator code printed by `pnpm db:seed`. Then create provider logins under **Settings → Staff logins**.
+- **Staff logins.** The first administrator is Dr. Kniquiah Hughes (`ADMIN_EMAIL=kniquiah.hughes@gmail.com`). Sign in at `/admin/login` with that email and the initial password; the first sign-in shows a QR code for an authenticator app. Then create provider logins under **Settings → Staff logins**.
+- **SMS-only launch.** Until the WhatsApp variables are set, every message goes by SMS through Twilio. Once Meta approves, set the `WA_*` variables and redeploy; nothing else changes. With neither configured, messages (including sign-in codes) appear in Vercel → Logs, which is enough for a dry run.
+- **Step-by-step go-live guide:** [`docs/GO-LIVE.md`](docs/GO-LIVE.md). WhatsApp templates to submit: [`docs/WHATSAPP_TEMPLATES.md`](docs/WHATSAPP_TEMPLATES.md).
 - **Providers.** The pilot runs with one provider, Dr. Kniquiah Hughes. Add providers later under **Settings → Providers**; set each one's hours under **Opening hours** if they differ from the clinic's. Defaults already set: clinic phone and staff alerts +1 786 942 0603; NCBA account "Wellness Ave." no. 6001232. The bank details must match the printed notice at the clinic.
 - **Check the hours.** Under **Settings → Opening hours**, confirm Friday 08:00–17:00 and Saturday 08:00–18:00, plus any per-provider overrides.
 - **Legal review.** Anguilla counsel reviews the consent text in `src/i18n/en.json` (`ui.details.consent*`), the privacy notice and the retention settings.

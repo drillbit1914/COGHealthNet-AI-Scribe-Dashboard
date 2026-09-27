@@ -14,7 +14,6 @@ import { toE164 } from '../phone';
 import { getSettings } from '../settings';
 import { getStorage } from '../storage';
 import { addDays, localToUtc } from '../time';
-import { newTotpSecret, totpUri } from '../totp';
 import { SettingsPatch } from './settings-schema';
 
 export type Staff = Extract<Actor, { type: 'STAFF' }>;
@@ -675,7 +674,7 @@ export async function staffUsers(ctx: Ctx, actor: Staff) {
   );
 }
 
-/** Create a login; returns a one-time temporary password and TOTP enrolment URI (shown once). */
+/** Create a login; returns a one-time temporary password. Admins set up two-factor at first sign-in. */
 export async function createStaff(ctx: Ctx, actor: Staff, raw: unknown) {
   requireAdmin(actor);
   const b = z
@@ -687,18 +686,16 @@ export async function createStaff(ctx: Ctx, actor: Staff, raw: unknown) {
     .parse(raw);
   if (b.role === 'PROVIDER' && !b.providerId) throw badRequest('Choose the provider this login belongs to');
   const password = crypto.randomBytes(12).toString('base64url');
-  const totpSecret = newTotpSecret();
   const row = await ctx.db.staffUser.create({
     data: {
       email: b.email.toLowerCase(),
       role: b.role,
       providerId: b.role === 'PROVIDER' ? b.providerId : null,
       passwordHash: await hashPassword(password),
-      totpSecret,
     },
   });
   await audit(ctx.db, actor, 'create', 'staff_user', row.id, null, { email: row.email, role: row.role });
-  return { id: row.id, email: row.email, temporaryPassword: password, totpUri: totpUri(totpSecret, row.email) };
+  return { id: row.id, email: row.email, temporaryPassword: password };
 }
 
 export async function setStaffActive(ctx: Ctx, actor: Staff, id: string, active: boolean) {

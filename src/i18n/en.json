@@ -36,7 +36,9 @@
     "invalidRange": "Please choose a valid date range.",
     "badLogin": "Email, password or code is not correct.",
     "locked": "Too many attempts. Try again in 15 minutes.",
-    "totpRequired": "Administrators must set up two-factor authentication."
+    "totpRequired": "Administrators must set up two-factor authentication.",
+    "setupExpired": "Two-factor setup timed out. Sign in again to restart it.",
+    "alreadyEnrolled": "Two-factor is already set up. Sign in with your authenticator code."
   },
   "reasons": {
     "requestExpired": "The request expired before it could be confirmed",

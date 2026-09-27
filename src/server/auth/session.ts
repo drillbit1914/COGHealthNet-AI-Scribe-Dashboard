@@ -1,5 +1,5 @@
 import { sealData, unsealData } from 'iron-session';
-import type { NextRequest, NextResponse } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 import type { Actor } from '../audit';
 import { getDb, type Queryable } from '../db';
 
@@ -71,3 +71,25 @@ export async function actorFromCookie(
 
 export const actorFromRequest = (req: NextRequest, db?: Queryable, now?: Date) =>
   actorFromCookie(req.cookies.get(SESSION_COOKIE)?.value, db, now);
+
+/** Response that signs a staff member in (12-hour sealed cookie). */
+export async function staffSessionResponse(
+  now: Date,
+  u: { staffId: string; role: 'ADMIN' | 'PROVIDER'; providerId: string | null },
+) {
+  const iat = now.getTime();
+  const res = NextResponse.json({ role: u.role });
+  setSessionCookie(
+    res,
+    await sealSession({
+      kind: 'staff',
+      staffId: u.staffId,
+      role: u.role,
+      providerId: u.providerId,
+      iat,
+      exp: iat + STAFF_SESSION_S * 1000,
+    }),
+    STAFF_SESSION_S,
+  );
+  return res;
+}

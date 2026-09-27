@@ -142,6 +142,8 @@ export class ConsoleProvider implements WhatsAppProvider {
 export interface Providers {
   whatsapp: WhatsAppProvider;
   sms: MessagingProvider;
+  /** False when SMS is live but WhatsApp is not configured yet: everything goes by SMS. */
+  whatsappEnabled?: boolean;
 }
 
 let providers: Providers | undefined;
@@ -163,7 +165,9 @@ export function getProviders(): Providers {
       : new ConsoleProvider('SMS');
   if (e.NODE_ENV === 'production' && (whatsapp instanceof ConsoleProvider || sms instanceof ConsoleProvider))
     console.warn('Messaging credentials missing — messages are being logged, not sent.');
-  providers = { whatsapp, sms };
+  // SMS-only launch (before Meta approval): never route to the logging stub while real SMS works.
+  const whatsappEnabled = !(whatsapp instanceof ConsoleProvider && !(sms instanceof ConsoleProvider));
+  providers = { whatsapp, sms, whatsappEnabled };
   return providers;
 }
 export const setProviders = (p: Providers | undefined) => void (providers = p);

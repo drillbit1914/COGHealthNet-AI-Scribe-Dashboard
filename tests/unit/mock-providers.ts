@@ -11,6 +11,7 @@ export class MockProviders implements Providers {
   sent: Sent[] = [];
   failWhatsApp = false;
   failSms = false;
+  whatsappEnabled = true;
   media = { data: Buffer.from([0x89, 0x50, 0x4e, 0x47]), contentType: 'image/png' };
   whatsapp: WhatsAppProvider = {
     channel: 'WHATSAPP',

@@ -97,3 +97,18 @@ test('provider: own calendar only, no admin pages', async ({ page }) => {
   await page.goto('/admin/settings');
   await expect(page).toHaveURL(/\/admin\/queue/);
 });
+
+test('first admin sign-in: scan QR, enter code, land in the console', async ({ page }) => {
+  const { createAdminWithoutTotp } = await import('./db');
+  const a = await createAdminWithoutTotp();
+  await page.goto('/admin/login');
+  await page.getByLabel('Email').fill(a.email);
+  await page.getByLabel('Password').fill(a.password);
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await expect(page.getByRole('heading', { name: 'Set up two-factor sign-in' })).toBeVisible();
+  await expect(page.getByAltText('Authenticator QR code')).toBeVisible();
+  const key = (await page.locator('code').textContent())!.trim();
+  await page.getByLabel('6-digit code').fill(a.codeFor(key));
+  await page.getByRole('button', { name: 'Finish setup and sign in' }).click();
+  await expect(page.getByRole('heading', { name: 'Approval queue' })).toBeVisible();
+});
